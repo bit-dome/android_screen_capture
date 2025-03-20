@@ -6,6 +6,8 @@ import android.content.pm.PackageManager
 import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -31,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -42,20 +45,34 @@ import com.dome.recordscreen.ScreenRecordService.Companion.STOP_RECORDING
 
 class MainActivity : ComponentActivity() {
 
+    private lateinit var handler: Handler
+    private lateinit var captureRunnable: Runnable
+
+
+
     private val mediaProjectionManager by lazy {
         getSystemService<MediaProjectionManager>()!!
     }
 
 
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //enableEdgeToEdge()
+
+
+
+
+        enableEdgeToEdge()
         setContent {
             MaterialTheme {
                 val isServiceRunning by ScreenRecordService
                     .isServiceRunning
                     .collectAsStateWithLifecycle()
+
+                var snapCount by remember { mutableStateOf(0) }
+
+
 
                 var hasNotificationPermission by remember {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -145,20 +162,51 @@ class MainActivity : ComponentActivity() {
                         }
 
 
-
+                        if (isServiceRunning){
                         Button(onClick = {
 
-                            Intent(
-                                applicationContext,
-                                ScreenRecordService::class.java
-                            ).also {
-                                it.action = SNAP
-                                startForegroundService(it)
+                            handler = Handler()
+
+
+                            // Set up the capture runnable loop here
+                            // HACK: don't set this up in service, it will crash the app
+                            captureRunnable = object : Runnable {
+                                override fun run() {
+
+
+                                    Intent(
+                                        applicationContext,
+                                        ScreenRecordService::class.java
+                                    ).also {
+                                        it.action = SNAP
+                                        startForegroundService(it)
+                                    }
+                                    snapCount++
+
+
+                                    handler.postDelayed(this, 1000)  // Capture once every 1 second (1 fps)
+                                }
                             }
 
-                        }){Text(text="take screenshot")}
+                            handler.post(captureRunnable)
+
+
+                            }
+
+
+                        ){Text(text="start take screenshot loop")}
+
+                            Text(text = "Snap count: $snapCount", fontSize = 20.sp)
                     }
 
+
+
+
+
+
+
+
+                    }
 
 
 
@@ -182,6 +230,18 @@ class MainActivity : ComponentActivity() {
 
             }
         }
+
+
+
+
+
+
     }
+
+
+
+
 }
+
+
 

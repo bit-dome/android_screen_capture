@@ -46,8 +46,7 @@ class ScreenRecordService: Service() {
     private var virtualDisplay: VirtualDisplay? = null
 
     private lateinit var  imageReader: ImageReader
-    private lateinit var handler: Handler
-    private lateinit var captureRunnable: Runnable
+
 
     private var width = 100
     private var height = 200
