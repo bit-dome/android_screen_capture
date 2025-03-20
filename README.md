@@ -9,11 +9,16 @@ android kotlin app to take screen shot
 press takescreenshot button and copy base64 string from logcat
 
 
-
 # FYI
 - it only take screenshot every 1 sec
 - and take only when screen changed
 
+
+
+# BUG
+if you start a thread loop inside a service it will show an error about permission which is wrong and misleading!!!
+
+![](assets/cat.jpg)
 
 
 # Convert base64jpeg to image
